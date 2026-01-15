@@ -206,6 +206,9 @@
               </Properties>
             </Component>
             <Container class="javax.swing.JPanel" name="panelUsuarios">
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="panelUsuariosMouseClicked"/>
+              </Events>
 
               <Layout>
                 <DimensionLayout dim="0">
@@ -274,6 +277,9 @@
               </SubComponents>
             </Container>
             <Container class="javax.swing.JPanel" name="panelHabitaciones">
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="panelHabitacionesMouseClicked"/>
+              </Events>
 
               <Layout>
                 <DimensionLayout dim="0">
@@ -342,6 +348,9 @@
               </SubComponents>
             </Container>
             <Container class="javax.swing.JPanel" name="panelPagos">
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="panelPagosMouseClicked"/>
+              </Events>
 
               <Layout>
                 <DimensionLayout dim="0">
@@ -410,6 +419,9 @@
               </SubComponents>
             </Container>
             <Container class="javax.swing.JPanel" name="panelEstadias">
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="panelEstadiasMouseClicked"/>
+              </Events>
 
               <Layout>
                 <DimensionLayout dim="0">
@@ -478,6 +490,9 @@
               </SubComponents>
             </Container>
             <Container class="javax.swing.JPanel" name="panelHuespedes">
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="panelHuespedesMouseClicked"/>
+              </Events>
 
               <Layout>
                 <DimensionLayout dim="0">

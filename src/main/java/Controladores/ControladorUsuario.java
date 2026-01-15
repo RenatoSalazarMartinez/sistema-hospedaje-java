@@ -55,6 +55,14 @@ public class ControladorUsuario {
     public List<Usuario> listarUsuarios() {
         return usuarioDAO.listar();
     }
+    
+    public List<Usuario> buscarUsuarios(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return usuarioDAO.listar();
+        }
+        return usuarioDAO.buscarPorUsername(texto);
+    }
+
 
     // VALIDAR LOGIN
     public Usuario login(String username, String password) {

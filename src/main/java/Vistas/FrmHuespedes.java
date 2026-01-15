@@ -19,17 +19,25 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
-
+import Controladores.*;
+import DTO.Huesped;
+import java.awt.event.KeyEvent;
+import java.util.List;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 public class FrmHuespedes extends javax.swing.JFrame {
-    
+    private ControladorHuesped controladorHuesped;
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmHuespedes.class.getName());
 
     
     public FrmHuespedes() {
         configurarApariencia();
         initComponents();
+        configurarTabla();
         personalizarDiseno();
+        controladorHuesped = new ControladorHuesped();
+        listarHuespedesTabla();
     }
 
     /**
@@ -50,8 +58,9 @@ public class FrmHuespedes extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         tablaHuespedes = new javax.swing.JTable();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Gestión de Huéspedes");
+        setAlwaysOnTop(true);
         setPreferredSize(new java.awt.Dimension(913, 654));
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
@@ -61,6 +70,12 @@ public class FrmHuespedes extends javax.swing.JFrame {
         jLabel7.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(164, 164, 164));
         jLabel7.setText("Administrar los huéspedes del hospedaje");
+
+        txtBuscarHuespedes.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtBuscarHuespedesKeyReleased(evt);
+            }
+        });
 
         btnNuevoHuesped.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnNuevoHuesped.setText("Nuevo Huésped");
@@ -74,9 +89,14 @@ public class FrmHuespedes extends javax.swing.JFrame {
                 {null, null, null, null}
             },
             new String [] {
-                "DNI", "Nombre", "Teléfono", "Acciones"
+                "ID", "DNI", "Nombre", "Teléfono"
             }
         ));
+        tablaHuespedes.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaHuespedesMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tablaHuespedes);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -132,6 +152,205 @@ public class FrmHuespedes extends javax.swing.JFrame {
         abrirDialogoNuevoHuesped();
     }//GEN-LAST:event_btnNuevoHuespedActionPerformed
 
+    private void txtBuscarHuespedesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtBuscarHuespedesKeyReleased
+        String texto = txtBuscarHuespedes.getText().trim().toLowerCase();
+        try {
+            List<Huesped> lista = controladorHuesped.listarHuespedes();
+            DefaultTableModel modelo = (DefaultTableModel) tablaHuespedes.getModel();
+            modelo.setRowCount(0);
+
+            for (Huesped h : lista) {
+                if (h.getNombres().toLowerCase().contains(texto) || h.getDni().contains(texto)) {
+                    Object[] fila = new Object[]{
+                        h.getIdHuesped(),
+                        h.getDni(),
+                        h.getNombres(),
+                        h.getTelefono()
+                    };
+                    modelo.addRow(fila);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_txtBuscarHuespedesKeyReleased
+
+    private void tablaHuespedesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaHuespedesMouseClicked
+        if (evt.getClickCount() == 2) {
+         
+            int fila = tablaHuespedes.getSelectedRow();
+            if (fila != -1) {
+                // Obtenemos el DNI de la fila seleccionada
+                String dni = tablaHuespedes.getValueAt(fila, 1).toString();
+
+                // Obtener el ID del huésped desde el controlador
+                Huesped h = controladorHuesped.buscarPorDni(dni);
+                if (h != null) {
+                    abrirDialogoEditarHuesped(h.getIdHuesped());
+                }
+            }
+        }
+    }//GEN-LAST:event_tablaHuespedesMouseClicked
+
+    private void abrirDialogoEditarHuesped(int idHuesped) {
+        try {
+            // Obtener el huésped desde el controlador
+            Huesped h = controladorHuesped.buscarHuesped(idHuesped);
+            if (h == null) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "No se encontró el huésped.",
+                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            JDialog dialog = new JDialog(this, "Editar Huésped", true);
+            dialog.setLayout(new BorderLayout());
+
+            // Panel principal del formulario
+            JPanel pnlForm = new JPanel();
+            pnlForm.setLayout(new BoxLayout(pnlForm, BoxLayout.Y_AXIS));
+            pnlForm.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+            pnlForm.setBackground(Color.WHITE);
+
+            JLabel lblTitulo = new JLabel("Editar Huésped");
+            lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+            lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+            pnlForm.add(lblTitulo);
+            pnlForm.add(Box.createVerticalStrut(20));
+
+            // Campos de texto con datos precargados
+            JPanel pNombre = crearCampoEstilizado("Nombre Completo", "");
+            JPanel pDni = crearCampoEstilizado("DNI / Identificación", "");
+            JPanel pTelefono = crearCampoEstilizado("Teléfono", "");
+
+            JTextField txtNombre = (JTextField) pNombre.getComponent(1);
+            JTextField txtDni = (JTextField) pDni.getComponent(1);
+            JTextField txtTelefono = (JTextField) pTelefono.getComponent(1);
+
+            // Setear los valores actuales
+            txtNombre.setText(h.getNombres());
+            txtDni.setText(h.getDni());
+            
+            /*Por si se desea desactivar el campo de DNI al realizar una edición
+            txtDni.setEditable(false);
+            txtDni.setEnabled(false);*/
+
+            
+            txtTelefono.setText(h.getTelefono());
+
+            // VALIDAR SOLO NÚMEROS
+            txtDni.addKeyListener(new java.awt.event.KeyAdapter() {
+                @Override
+                public void keyTyped(KeyEvent evt) {
+                    soloNumeros(evt, txtDni, 12);
+                }
+            });
+
+            txtTelefono.addKeyListener(new java.awt.event.KeyAdapter() {
+                @Override
+                public void keyTyped(KeyEvent evt) {
+                    soloNumeros(evt, txtTelefono, 9);
+                }
+            });
+            
+            pnlForm.add(pNombre);
+            pnlForm.add(Box.createVerticalStrut(15));
+            pnlForm.add(pDni);
+            pnlForm.add(Box.createVerticalStrut(15));
+            pnlForm.add(pTelefono);
+
+            // Panel de botones
+            JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            pnlBotones.setBackground(Color.WHITE);
+            pnlBotones.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
+
+            JButton btnCancelar = new JButton("Cancelar");
+            JButton btnGuardar = new JButton("Guardar Cambios");
+
+            // Estilo del botón guardar
+            btnGuardar.setBackground(new Color(37, 99, 235));
+            btnGuardar.setForeground(Color.WHITE);
+            btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+            // BOTÓN CANCELAR (secundario)
+            btnCancelar.setBackground(new Color(241, 245, 249));
+            btnCancelar.setForeground(new Color(30, 41, 59));
+            btnCancelar.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            btnCancelar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            
+            // Accion del boton cancelar
+            btnCancelar.addActionListener(e -> dialog.dispose());
+
+            // Accion del boton guardar
+            btnGuardar.addActionListener(e -> {
+                String nombre = txtNombre.getText().trim();
+                String dni = txtDni.getText().trim();
+                String telefono = txtTelefono.getText().trim();
+
+                // Validaciones básicas
+                if (nombre.isEmpty() || dni.isEmpty() || telefono.isEmpty()) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                            "Todos los campos son obligatorios.",
+                            "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Validacion de longitud del DNI y CE
+                if (!(dni.length() == 8 || dni.length() == 12)) {
+                    JOptionPane.showMessageDialog(dialog,
+                            "El DNI debe tener 8 dígitos o el CE 12.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                
+                try {
+                    // Actualizar los datos del huésped
+                    h.setNombres(nombre);
+                    h.setDni(dni);
+                    h.setTelefono(telefono);
+
+                    boolean exito = controladorHuesped.modificarHuesped(h);
+
+                    if (exito) {
+                        javax.swing.JOptionPane.showMessageDialog(dialog,
+                                "Huésped actualizado correctamente.");
+                        listarHuespedesTabla(); // Refrescar tabla
+                        dialog.dispose();
+                    } else {
+                        javax.swing.JOptionPane.showMessageDialog(dialog,
+                                "No se pudo actualizar el huésped.",
+                                "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                            "Error: " + ex.getMessage(),
+                            "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+            });
+
+            pnlBotones.add(btnCancelar);
+            pnlBotones.add(btnGuardar);
+
+            // Agregar paneles al dialogo
+            dialog.add(pnlForm, BorderLayout.CENTER);
+            dialog.add(pnlBotones, BorderLayout.SOUTH);
+
+            dialog.pack();
+            dialog.setSize(400, 420);
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
+
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error al abrir el diálogo: " + ex.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
     private void configurarApariencia() {
         try {
             FlatIntelliJLaf.setup();
@@ -145,6 +364,23 @@ public class FrmHuespedes extends javax.swing.JFrame {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
+
+    private void configurarTabla() {
+        DefaultTableModel modelo = new DefaultTableModel(
+                new Object[]{"ID", "DNI", "NOMBRES", "TELÉFONO"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // 🔒 ninguna celda editable
+            }
+        };
+
+        tablaHuespedes.setModel(modelo);
+
+        // Refuerzo extra (opcional pero recomendado)
+        tablaHuespedes.setDefaultEditor(Object.class, null);
+    }
+
     
     private void personalizarDiseno() {
         // 1. Fondo del panel principal
@@ -192,9 +428,10 @@ public class FrmHuespedes extends javax.swing.JFrame {
     }
     
     private void abrirDialogoNuevoHuesped() {
-        JDialog dialog = new JDialog(this, "Crear Nuevo Usuario", true);
+        JDialog dialog = new JDialog(this, "Registrar Nuevo Huésped", true);
         dialog.setLayout(new BorderLayout());
-        
+
+        // Panel principal del formulario
         JPanel pnlForm = new JPanel();
         pnlForm.setLayout(new BoxLayout(pnlForm, BoxLayout.Y_AXIS));
         pnlForm.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
@@ -203,42 +440,126 @@ public class FrmHuespedes extends javax.swing.JFrame {
         JLabel lblTitulo = new JLabel("Registrar Huésped");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
         pnlForm.add(lblTitulo);
         pnlForm.add(Box.createVerticalStrut(20));
-        pnlForm.add(crearCampoEstilizado("Nombre Completo", "Ej: Juan Perez"));
-        pnlForm.add(Box.createVerticalStrut(15));
-        pnlForm.add(crearCampoEstilizado("DNI / Identificación", "Número de 8 dígitos"));
-        pnlForm.add(Box.createVerticalStrut(15));
-        pnlForm.add(crearCampoEstilizado("Teléfono", "Ej: 987654321"));
+
+        // Campos de texto
+        JPanel pNombre = crearCampoEstilizado("Nombre Completo", "Ej: Juan Perez");
+        JPanel pDni = crearCampoEstilizado("DNI / Identificación", "Número de 8 dígitos");
+        JPanel pTelefono = crearCampoEstilizado("Teléfono", "Ej: 987654321");
+
+        // Obtener los JTextField para poder leer los datos
+        JTextField txtNombre = (JTextField) pNombre.getComponent(1);
+        JTextField txtDni = (JTextField) pDni.getComponent(1);
+        JTextField txtTelefono = (JTextField) pTelefono.getComponent(1);
+
         
+        //VALIDACIONES DE SOLO NÚMEROS
+        txtDni.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent evt) {
+                soloNumeros(evt, txtDni, 12); // DNI o CE
+            }
+        });
+
+        txtTelefono.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent evt) {
+                soloNumeros(evt, txtTelefono, 9); // Teléfono
+            }
+        });
+
+        pnlForm.add(pNombre);
+        pnlForm.add(Box.createVerticalStrut(15));
+        pnlForm.add(pDni);
+        pnlForm.add(Box.createVerticalStrut(15));
+        pnlForm.add(pTelefono);
+
+        // Panel de botones
         JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlBotones.setBackground(Color.WHITE);
         pnlBotones.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
-        
+
         JButton btnCancelar = new JButton("Cancelar");
-        JButton btnGuardar = new JButton("Guardar Huesped");
+        JButton btnGuardar = new JButton("Guardar Huésped");
+
+        // Estilo del botón guardar
         btnGuardar.setBackground(new Color(37, 99, 235));
         btnGuardar.setForeground(Color.WHITE);
         btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
+        // Acción del botón cancelar
         btnCancelar.addActionListener(e -> dialog.dispose());
+
+        // Acción del botón guardar
         btnGuardar.addActionListener(e -> {
-            // Lógica de guardado aquí
-            dialog.dispose();
+            String nombre = txtNombre.getText().trim();
+            String dni = txtDni.getText().trim();
+            String telefono = txtTelefono.getText().trim();
+
+            // Validaciones básicas
+            if (nombre.isEmpty() || dni.isEmpty() || telefono.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Todos los campos son obligatorios.",
+                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            //Validacion de Longitud del dni y CE
+            if (!(dni.length() == 8 || dni.length() == 12)) {
+                JOptionPane.showMessageDialog(dialog,
+                        "El DNI debe tener 8 dígitos o el CE 12.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            //Validamos duplicado de DNI
+            if (controladorHuesped.buscarPorDni(dni) != null) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Ya existe un huésped con ese DNI",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            
+            try {
+                // Crear DTO y guardar usando el controlador
+                Huesped h = new Huesped(dni, nombre, telefono);
+                boolean exito = controladorHuesped.crearHuesped(h);
+
+                if (exito) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                            "Huésped registrado correctamente.");
+                    listarHuespedesTabla(); // Refrescar tabla principal
+                    dialog.dispose();
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                            "No se pudo registrar el huésped.",
+                            "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Error: " + ex.getMessage(),
+                        "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         pnlBotones.add(btnCancelar);
         pnlBotones.add(btnGuardar);
 
+        // Agregar paneles al dialogo
         dialog.add(pnlForm, BorderLayout.CENTER);
         dialog.add(pnlBotones, BorderLayout.SOUTH);
-        
+
         dialog.pack();
         dialog.setSize(400, 420);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
+
 
     private JPanel crearCampoEstilizado(String titulo, String placeholder) {
         JPanel p = new JPanel();
@@ -258,6 +579,45 @@ public class FrmHuespedes extends javax.swing.JFrame {
         p.add(txt, BorderLayout.CENTER);
         return p;
     }
+    
+    private void listarHuespedesTabla() {
+        try {
+            List<Huesped> lista = controladorHuesped.listarHuespedes();
+            DefaultTableModel modelo = (DefaultTableModel) tablaHuespedes.getModel();
+            modelo.setRowCount(0); // limpiar tabla
+
+            for (Huesped h : lista) {
+                Object[] fila = new Object[]{
+                    h.getIdHuesped(),
+                    h.getDni(), // Columna "DNI"
+                    h.getNombres(), // Columna "Nombre"
+                    h.getTelefono() // Columna "Teléfono"
+                };
+                modelo.addRow(fila);
+            }
+        } catch (Exception e) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "Error al listar huéspedes: " + e.getMessage(),
+                    "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void soloNumeros(KeyEvent evt, JTextField txt, int maxLength) {
+        char c = evt.getKeyChar();
+
+        if (!Character.isDigit(c) && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+            evt.consume();
+            return;
+        }
+
+        // Bloquear si supera longitud
+        if (txt.getText().length() >= maxLength) {
+            evt.consume();
+        }
+    }
+
+    
     
     /**
      * @param args the command line arguments

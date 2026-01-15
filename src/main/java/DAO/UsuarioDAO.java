@@ -181,4 +181,37 @@ public class UsuarioDAO implements CRUD<Usuario>{
 
         return u;
     }
+
+    // BUSCAR usuarios por username (para el buscador del JFrame)
+    public List<Usuario> buscarPorUsername(String texto) {
+        List<Usuario> lista = new ArrayList<>();
+
+        String sql = """
+        SELECT * FROM Usuario
+        WHERE username LIKE ?
+        """;
+
+        try (Connection con = ConexionSQL.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, "%" + texto + "%");
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Usuario u = new Usuario();
+                u.setIdUsuario(rs.getInt("idUsuario"));
+                u.setUsername(rs.getString("username"));
+                u.setRol(rs.getString("rol"));
+                u.setEstado(rs.getString("estado"));
+                lista.add(u);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error en UsuarioDAO.buscarPorUsername(): " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al buscar usuarios.", e);
+        }
+
+        return lista;
+    }
+
 }

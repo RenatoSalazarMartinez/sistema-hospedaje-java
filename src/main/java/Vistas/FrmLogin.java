@@ -6,6 +6,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.UIManager;
+import Controladores.*;
+import DTO.Usuario;
+import javax.swing.JOptionPane;
 
 public class FrmLogin extends javax.swing.JFrame {
     
@@ -37,6 +40,7 @@ public class FrmLogin extends javax.swing.JFrame {
         jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Iniciar Sesión");
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/IconLogin.png"))); // NOI18N
 
@@ -97,6 +101,11 @@ public class FrmLogin extends javax.swing.JFrame {
 
         jLabel6.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel6.setText("¿Olvidaste tu contraseña?");
+        jLabel6.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel6MouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -164,7 +173,37 @@ public class FrmLogin extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnIniciarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarSesionActionPerformed
-        // TODO add your handling code here:
+        String username = txtUsuario.getText().trim();
+    String password = new String(txtContraseña.getPassword()).trim();
+
+    if (username.isEmpty() || password.isEmpty()) {
+        JOptionPane.showMessageDialog(
+            this,
+            "Complete todos los campos",
+            "Advertencia",
+            JOptionPane.WARNING_MESSAGE
+        );
+        return;
+    }
+
+     ControladorUsuario ctrl = new ControladorUsuario();
+        Usuario usuario = ctrl.login(username, password);
+
+    if (usuario != null) {
+        JOptionPane.showMessageDialog(this, "Bienvenido " + usuario.getUsername());
+
+        //ABRIMOS EL MENU PRINCIPAL
+        new FrmPrincipal().setVisible(true);
+        this.dispose();
+
+    } else {
+        JOptionPane.showMessageDialog(
+            this,
+            "Usuario o contraseña incorrectos",
+            "Error",
+            JOptionPane.ERROR_MESSAGE
+        );
+    }
     }//GEN-LAST:event_btnIniciarSesionActionPerformed
 
     private void btnRegistrarseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarseActionPerformed
@@ -174,6 +213,10 @@ public class FrmLogin extends javax.swing.JFrame {
     private void txtUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsuarioActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtUsuarioActionPerformed
+
+    private void jLabel6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel6MouseClicked
+        JOptionPane.showMessageDialog(this, "Comuníquese con el administrador para cambiar su contraseña","Atención",JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jLabel6MouseClicked
 
     private void configurarFlatLaf() {
         try {

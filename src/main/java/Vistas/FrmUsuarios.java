@@ -19,9 +19,18 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
+import Controladores.*;
+import DTO.Usuario;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 public class FrmUsuarios extends javax.swing.JFrame {
     
+    private ControladorUsuario controladorUsuario;
+    private DefaultTableModel modelo;
+    // Campos del formulario
+    private JTextField txtUsername;
+    private JTextField txtPassword;
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmUsuarios.class.getName());
 
     
@@ -29,6 +38,8 @@ public class FrmUsuarios extends javax.swing.JFrame {
         configurarApariencia();
         initComponents();
         personalizarDiseno();
+        controladorUsuario = new ControladorUsuario();
+        inicializarTabla();
     }
 
     /**
@@ -61,8 +72,14 @@ public class FrmUsuarios extends javax.swing.JFrame {
             .addGap(0, 300, Short.MAX_VALUE)
         );
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Gestión de Usuarios");
+
+        jPanel1.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jPanel1KeyReleased(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(0, 0, 0));
@@ -71,6 +88,13 @@ public class FrmUsuarios extends javax.swing.JFrame {
         jLabel7.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(164, 164, 164));
         jLabel7.setText("Administrar usuarios del sistema");
+
+        txtBuscarUsuario.addActionListener(this::txtBuscarUsuarioActionPerformed);
+        txtBuscarUsuario.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtBuscarUsuarioKeyReleased(evt);
+            }
+        });
 
         btnNuevoUsuario.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnNuevoUsuario.setText("Nuevo Usuario");
@@ -84,9 +108,14 @@ public class FrmUsuarios extends javax.swing.JFrame {
                 {null, null, null, null}
             },
             new String [] {
-                "DNI", "Nombre", "Teléfono", "Acciones"
+                "ID", "Usuario", "Rol", "Estado"
             }
         ));
+        tablaUsuarios.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaUsuariosMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tablaUsuarios);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -144,6 +173,109 @@ public class FrmUsuarios extends javax.swing.JFrame {
         abrirDialogoNuevoUsuario();
     }//GEN-LAST:event_btnNuevoUsuarioActionPerformed
 
+    private void jPanel1KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jPanel1KeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jPanel1KeyReleased
+
+    private void txtBuscarUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBuscarUsuarioActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtBuscarUsuarioActionPerformed
+
+    private void txtBuscarUsuarioKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtBuscarUsuarioKeyReleased
+        buscarUsuarios();
+    }//GEN-LAST:event_txtBuscarUsuarioKeyReleased
+
+    private void tablaUsuariosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaUsuariosMouseClicked
+        // TODO add your handling code here:if(evt.getClickCount() == 2){ // doble click
+            int fila = tablaUsuarios.getSelectedRow();
+            if(fila != -1){
+                int idUsuario = (int) modelo.getValueAt(fila, 0);
+                Usuario u = controladorUsuario.buscarUsuario(idUsuario);
+                abrirDialogoEditarUsuario(u);
+        }
+        
+    }//GEN-LAST:event_tablaUsuariosMouseClicked
+
+    private void abrirDialogoEditarUsuario(Usuario u) {
+        JDialog dialog = new JDialog(this, "Editar Usuario", true);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel pnlForm = new JPanel();
+        pnlForm.setLayout(new BoxLayout(pnlForm, BoxLayout.Y_AXIS));
+        pnlForm.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        pnlForm.setBackground(Color.WHITE);
+
+        JLabel lblTitulo = new JLabel("Editar Usuario");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pnlForm.add(lblTitulo);
+        pnlForm.add(Box.createVerticalStrut(20));
+
+        // Solo nombre de usuario
+        JTextField txtUser = new JTextField(u.getUsername());
+        txtUser.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ej: Admin");
+
+        JPanel pnlUsuario = new JPanel(new BorderLayout(0, 5));
+        pnlUsuario.setBackground(Color.WHITE);
+        JLabel lblUser = new JLabel("Usuario");
+        lblUser.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        pnlUsuario.add(lblUser, BorderLayout.NORTH);
+        pnlUsuario.add(txtUser, BorderLayout.CENTER);
+
+        pnlForm.add(pnlUsuario);
+
+        // Botones
+        JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlBotones.setBackground(Color.WHITE);
+        JButton btnCancelar = new JButton("Cancelar");
+        JButton btnGuardar = new JButton("Guardar");
+        btnGuardar.setBackground(new Color(37, 99, 235));
+        btnGuardar.setForeground(Color.WHITE);
+
+        // BOTÓN CANCELAR (secundario)
+        btnCancelar.setBackground(new Color(241, 245, 249));
+        btnCancelar.setForeground(new Color(30, 41, 59));
+        btnCancelar.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnCancelar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        btnGuardar.addActionListener(e -> {
+            if (txtUser.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Complete el campo", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            u.setUsername(txtUser.getText().trim());
+            controladorUsuario.modificarUsuario(u);
+            listarUsuarios();
+            dialog.dispose();
+        });
+
+        pnlBotones.add(btnCancelar);
+        pnlBotones.add(btnGuardar);
+
+        dialog.add(pnlForm, BorderLayout.CENTER);
+        dialog.add(pnlBotones, BorderLayout.SOUTH);
+
+        dialog.setSize(400, 200);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void buscarUsuarios() {
+        String texto = txtBuscarUsuario.getText().trim();
+        modelo.setRowCount(0);
+
+        for (Usuario u : controladorUsuario.buscarUsuarios(texto)) {
+            modelo.addRow(new Object[]{
+                u.getIdUsuario(),
+                u.getUsername(),
+                u.getRol(),
+                u.getEstado()
+            });
+        }
+    }
+
+    
     private void configurarApariencia() {
         try {
             FlatIntelliJLaf.setup();
@@ -157,6 +289,35 @@ public class FrmUsuarios extends javax.swing.JFrame {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
     }
+
+    private void inicializarTabla() {
+        modelo = new DefaultTableModel(
+                new String[]{"ID", "Usuario", "Rol", "Estado"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tablaUsuarios.setModel(modelo);
+        listarUsuarios();
+    }
+
+    private void listarUsuarios() {
+        modelo.setRowCount(0);
+
+        for (Usuario u : controladorUsuario.listarUsuarios()) {
+            modelo.addRow(new Object[]{
+                u.getIdUsuario(),
+                u.getUsername(),
+                u.getRol(),
+                u.getEstado()
+            });
+        }
+    }
+
+
     
     private void personalizarDiseno() {
         // 1. Fondo del panel principal
@@ -170,7 +331,7 @@ public class FrmUsuarios extends javax.swing.JFrame {
         jLabel7.setForeground(new Color(100, 116, 139));
 
         // 3. Campo de Búsqueda
-        txtBuscarUsuario.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Buscar por nombre o DNI...");
+        txtBuscarUsuario.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Buscar por nombre de usuario...");
         txtBuscarUsuario.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
         txtBuscarUsuario.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
@@ -204,9 +365,9 @@ public class FrmUsuarios extends javax.swing.JFrame {
     }
 
     private void abrirDialogoNuevoUsuario() {
-        JDialog dialog = new JDialog(this, "Crear Nuevo Usuario", true);
+        JDialog dialog = new JDialog(this, "Nuevo Usuario", true);
         dialog.setLayout(new BorderLayout());
-        
+
         JPanel pnlForm = new JPanel();
         pnlForm.setLayout(new BoxLayout(pnlForm, BoxLayout.Y_AXIS));
         pnlForm.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
@@ -215,61 +376,119 @@ public class FrmUsuarios extends javax.swing.JFrame {
         JLabel lblTitulo = new JLabel("Registrar Usuario");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         pnlForm.add(lblTitulo);
         pnlForm.add(Box.createVerticalStrut(20));
-        pnlForm.add(crearCampoEstilizado("Nombre Completo", "Ej: Juan Perez"));
+
+        // Usuario
+        pnlForm.add(crearCampoUsuario());
         pnlForm.add(Box.createVerticalStrut(15));
-        pnlForm.add(crearCampoEstilizado("DNI / Identificación", "Número de 8 dígitos"));
-        pnlForm.add(Box.createVerticalStrut(15));
-        pnlForm.add(crearCampoEstilizado("Teléfono", "Ej: 987654321"));
-        
+
+        // Contraseña
+        pnlForm.add(crearCampoPassword());
+
         JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlBotones.setBackground(Color.WHITE);
-        pnlBotones.setBorder(BorderFactory.createEmptyBorder(0, 15, 15, 15));
-        
+
         JButton btnCancelar = new JButton("Cancelar");
-        JButton btnGuardar = new JButton("Guardar Usuario");
+        JButton btnGuardar = new JButton("Guardar");
+
         btnGuardar.setBackground(new Color(37, 99, 235));
         btnGuardar.setForeground(Color.WHITE);
-        btnGuardar.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
+         // BOTÓN CANCELAR (secundario)
+        btnCancelar.setBackground(new Color(241, 245, 249));
+        btnCancelar.setForeground(new Color(30, 41, 59));
+        btnCancelar.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btnCancelar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
         btnCancelar.addActionListener(e -> dialog.dispose());
-        btnGuardar.addActionListener(e -> {
-            // Lógica de guardado aquí
-            dialog.dispose();
-        });
+
+        btnGuardar.addActionListener(e -> guardarUsuario(dialog));
 
         pnlBotones.add(btnCancelar);
         pnlBotones.add(btnGuardar);
 
         dialog.add(pnlForm, BorderLayout.CENTER);
         dialog.add(pnlBotones, BorderLayout.SOUTH);
-        
-        dialog.pack();
-        dialog.setSize(400, 420);
+
+        dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
 
-    private JPanel crearCampoEstilizado(String titulo, String placeholder) {
-        JPanel p = new JPanel();
-        p.setLayout(new BorderLayout(0, 5));
+    private void guardarUsuario(JDialog dialog) {
+        if (txtUsername.getText().trim().isEmpty()
+                || txtPassword.getText().trim().isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Complete todos los campos",
+                    "Advertencia",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            Usuario u = new Usuario();
+            u.setUsername(txtUsername.getText().trim());
+            u.setPassword(txtPassword.getText().trim());
+            u.setRol("USUARIO"); // por ahora
+            u.setEstado("ACTIVO");
+
+            controladorUsuario.crearUsuario(u);
+            listarUsuarios();
+            txtUsername.setText("");
+            txtPassword.setText("");
+            txtUsername.requestFocus();
+            dialog.dispose();
+
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    ex.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+
+    private JPanel crearCampoUsuario() {
+        JPanel p = new JPanel(new BorderLayout(0, 5));
         p.setBackground(Color.WHITE);
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lbl = new JLabel(titulo);
+        JLabel lbl = new JLabel("Usuario");
         lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lbl.setForeground(new Color(71, 85, 105));
 
-        JTextField txt = new JTextField();
-        txt.setPreferredSize(new Dimension(300, 35));
-        txt.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, placeholder);
+        txtUsername = new JTextField();
+        txtUsername.putClientProperty(
+                FlatClientProperties.PLACEHOLDER_TEXT, "Ej: Admin"
+        );
 
         p.add(lbl, BorderLayout.NORTH);
-        p.add(txt, BorderLayout.CENTER);
+        p.add(txtUsername, BorderLayout.CENTER);
         return p;
     }
+
+    private JPanel crearCampoPassword() {
+        JPanel p = new JPanel(new BorderLayout(0, 5));
+        p.setBackground(Color.WHITE);
+
+        JLabel lbl = new JLabel("Contraseña");
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        txtPassword = new JTextField();
+        txtPassword.putClientProperty(
+                FlatClientProperties.PLACEHOLDER_TEXT, "********"
+        );
+
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(txtPassword, BorderLayout.CENTER);
+        return p;
+    }
+
     
     /**
      * @param args the command line arguments

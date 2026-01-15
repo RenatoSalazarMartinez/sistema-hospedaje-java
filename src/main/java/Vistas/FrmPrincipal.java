@@ -7,6 +7,7 @@ import java.awt.Cursor;
 import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 
@@ -129,6 +130,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
         jLabel5.setForeground(new java.awt.Color(164, 164, 164));
         jLabel5.setText("Selecciona un módulo para comenzar a trabajar");
 
+        panelUsuarios.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelUsuariosMouseClicked(evt);
+            }
+        });
+
         jLabel6.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel6.setForeground(new java.awt.Color(0, 0, 0));
         jLabel6.setText("Gestión de Usuarios");
@@ -165,6 +172,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
                 .addComponent(jLabel8)
                 .addGap(27, 27, 27))
         );
+
+        panelHabitaciones.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelHabitacionesMouseClicked(evt);
+            }
+        });
 
         jLabel9.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(0, 0, 0));
@@ -203,6 +216,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
                 .addGap(27, 27, 27))
         );
 
+        panelPagos.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelPagosMouseClicked(evt);
+            }
+        });
+
         jLabel12.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel12.setForeground(new java.awt.Color(0, 0, 0));
         jLabel12.setText("Gestión de Pagos");
@@ -240,6 +259,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
                 .addGap(27, 27, 27))
         );
 
+        panelEstadias.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelEstadiasMouseClicked(evt);
+            }
+        });
+
         jLabel15.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel15.setForeground(new java.awt.Color(0, 0, 0));
         jLabel15.setText("Gestión de Estadías");
@@ -276,6 +301,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
                 .addComponent(jLabel17)
                 .addGap(27, 27, 27))
         );
+
+        panelHuespedes.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelHuespedesMouseClicked(evt);
+            }
+        });
 
         jLabel18.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel18.setForeground(new java.awt.Color(0, 0, 0));
@@ -397,8 +428,44 @@ public class FrmPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarSesionActionPerformed
-        // TODO add your handling code here:
+        int opcion = JOptionPane.showConfirmDialog(
+                this,
+                "¿Deseas cerrar sesión?",
+                "Confirmar",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (opcion == JOptionPane.YES_OPTION) {
+            new FrmLogin().setVisible(true);
+            this.dispose();
+        }
+
     }//GEN-LAST:event_btnCerrarSesionActionPerformed
+
+    private void panelUsuariosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelUsuariosMouseClicked
+        FrmUsuarios frmUsuarios = new FrmUsuarios();
+        frmUsuarios.setVisible(true);
+    }//GEN-LAST:event_panelUsuariosMouseClicked
+
+    private void panelHuespedesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelHuespedesMouseClicked
+        FrmHuespedes frmHuespedes = new FrmHuespedes();
+        frmHuespedes.setVisible(true);
+    }//GEN-LAST:event_panelHuespedesMouseClicked
+
+    private void panelEstadiasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelEstadiasMouseClicked
+        FrmEstadias frmEstadias = new FrmEstadias();
+        frmEstadias.setVisible(true);
+    }//GEN-LAST:event_panelEstadiasMouseClicked
+
+    private void panelPagosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelPagosMouseClicked
+        FrmPagos frmPagos = new FrmPagos();
+        frmPagos.setVisible(true);
+    }//GEN-LAST:event_panelPagosMouseClicked
+
+    private void panelHabitacionesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelHabitacionesMouseClicked
+        FrmHabitaciones frmHabitaciones = new FrmHabitaciones();
+        frmHabitaciones.setVisible(true);
+    }//GEN-LAST:event_panelHabitacionesMouseClicked
 
     private void configurarFlatLaf() {
         try {
