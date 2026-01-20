@@ -86,12 +86,17 @@ public class FrmEstadias extends javax.swing.JFrame {
 
         tablaEstadias.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null}
+                {null, null, null, null, null, null, null, null, null}
             },
             new String [] {
-                "Huésped", "Habitación", "Ingreso", "Salida Programada", "Noches", "Precio por noche", "Total", "Estado"
+                "ID", "Huésped", "Habitación", "Ingreso", "Salida Programada", "Noches", "Precio por noche", "Total", "Estado"
             }
         ));
+        tablaEstadias.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaEstadiasMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(tablaEstadias);
 
         javax.swing.GroupLayout panelGraficosLayout = new javax.swing.GroupLayout(panelGraficos);
@@ -162,6 +167,174 @@ public class FrmEstadias extends javax.swing.JFrame {
         abrirDialogoNuevaEstadia();
     }//GEN-LAST:event_btnNuevaHabitacionActionPerformed
 
+    private void tablaEstadiasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaEstadiasMouseClicked
+        if (evt.getClickCount() == 2 && tablaEstadias.getSelectedRow() != -1) {
+            int fila = tablaEstadias.getSelectedRow();
+
+            String estado = tablaEstadias.getValueAt(fila, 8).toString();
+
+            // NO permitir editar si está FINALIZADA
+            if ("FINALIZADA".equalsIgnoreCase(estado)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Esta estadía ya fue finalizada y no puede ser editada",
+                        "Acción no permitida",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            abrirDialogoEditarEstadia(fila);
+        }
+    }//GEN-LAST:event_tablaEstadiasMouseClicked
+
+    private void abrirDialogoEditarEstadia(int fila) {
+
+        // ID REAL (columna oculta 0)
+        int idEstadia = Integer.parseInt(
+                tablaEstadias.getValueAt(fila, 0).toString()
+        );
+
+        String huesped = tablaEstadias.getValueAt(fila, 1).toString();
+        String habitacion = tablaEstadias.getValueAt(fila, 2).toString();
+        String estadoActual = tablaEstadias.getValueAt(fila, 8).toString();
+
+        JDialog dialog = new JDialog(this, "Editar Estadía", true);
+        dialog.setLayout(new BorderLayout());
+
+        // PANEL FORM 
+        JPanel pnlForm = new JPanel();
+        pnlForm.setLayout(new BoxLayout(pnlForm, BoxLayout.Y_AXIS));
+        pnlForm.setBorder(BorderFactory.createEmptyBorder(25, 25, 20, 25));
+        pnlForm.setBackground(Color.WHITE);
+
+        JLabel lblTitulo = new JLabel("Editar Estadía");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblSub = new JLabel("Modificar el estado de la estadía");
+        lblSub.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblSub.setForeground(new Color(148, 163, 184));
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        pnlForm.add(lblTitulo);
+        pnlForm.add(lblSub);
+        pnlForm.add(Box.createVerticalStrut(20));
+
+        // CAMPOS SOLO LECTURA
+        JPanel pHuesped = crearCampoEstilizado("Huésped", new JTextField(), "");
+        JPanel pHabitacion = crearCampoEstilizado("Habitación", new JTextField(), "");
+
+        JTextField txtHuesped = (JTextField) pHuesped.getComponent(1);
+        JTextField txtHabitacion = (JTextField) pHabitacion.getComponent(1);
+
+        txtHuesped.setText(huesped);
+        txtHabitacion.setText(habitacion);
+
+        txtHuesped.setEnabled(false);
+        txtHabitacion.setEnabled(false);
+
+        pnlForm.add(pHuesped);
+        pnlForm.add(Box.createVerticalStrut(10));
+        pnlForm.add(pHabitacion);
+        pnlForm.add(Box.createVerticalStrut(15));
+
+        // ================= ESTADO =================
+        JPanel pEstado = crearSelectorEstilizado(
+                "Estado de la Estadía",
+                new JComboBox<>(new String[]{"ACTIVA", "FINALIZADA"})
+        );
+
+        JComboBox<String> cbEstado = (JComboBox<String>) pEstado.getComponent(1);
+        cbEstado.setSelectedItem(estadoActual);
+
+        pnlForm.add(pEstado);
+
+        // BOTONES
+        JPanel pnlBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pnlBotones.setBackground(Color.WHITE);
+        pnlBotones.setBorder(BorderFactory.createEmptyBorder(10, 15, 20, 25));
+
+        JButton btnCancelar = new JButton("Cancelar");
+        JButton btnGuardar = new JButton("Guardar Cambios");
+
+        btnCancelar.addActionListener(e -> dialog.dispose());
+
+        btnGuardar.addActionListener(e -> {
+
+            String nuevoEstado = cbEstado.getSelectedItem().toString();
+
+            // CONFIRMACIÓN SOLO SI SE FINALIZA
+            if (!estadoActual.equals(nuevoEstado)
+                    && nuevoEstado.equals("FINALIZADA")) {
+
+                int r = JOptionPane.showConfirmDialog(
+                        dialog,
+                        "¿Desea finalizar la estadía?\nEsta acción liberará la habitación.",
+                        "Confirmar",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                );
+
+                if (r != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
+
+            try {
+                // SOLO FINALIZAR (ACTIVA → FINALIZADA)
+                if (!estadoActual.equals(nuevoEstado)
+                        && nuevoEstado.equals("FINALIZADA")) {
+
+                    int numeroHab = controladorEstadia
+                            .obtenerNumeroHabitacionPorEstadia(idEstadia);
+
+                    Habitacion hab = new ControladorHabitacion()
+                            .buscarHabitacion(idEstadia);
+
+                    controladorEstadia.finalizarEstadia(
+                            idEstadia,
+                            hab.getIdHabitacion()
+                    );
+
+                    // Actualizar tarjeta visual
+                    TarjetaHabitacion tarjeta = tarjetasHabitaciones.get(numeroHab);
+                    if (tarjeta != null) {
+                        tarjeta.setEstado("DISPONIBLE");
+                    }
+                }
+
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        "Estado de la estadía actualizado correctamente"
+                );
+
+                listarEstadias();
+                dialog.dispose();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                ex.printStackTrace();
+            }
+        });
+
+        pnlBotones.add(btnCancelar);
+        pnlBotones.add(btnGuardar);
+
+        dialog.add(pnlForm, BorderLayout.CENTER);
+        dialog.add(pnlBotones, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setSize(420, 380);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+    
     private void inyectarMonitorCuadricula() {
         // Rediseño a Cuadrícula de 3 filas x 6 columnas para las 18 habitaciones
         // Esto hace que el panel sea más ancho y menos alto, optimizando el espacio.
@@ -221,6 +394,7 @@ public class FrmEstadias extends javax.swing.JFrame {
 
         modeloEstadias = new DefaultTableModel(
                 new Object[]{
+                    "ID",
                     "Huésped",
                     "Habitación",
                     "Ingreso",
@@ -239,14 +413,58 @@ public class FrmEstadias extends javax.swing.JFrame {
 
         tablaEstadias.setModel(modeloEstadias);
         tablaEstadias.setRowHeight(35);
+        
+        // Ocultar columna ID
+        tablaEstadias.getColumnModel().getColumn(0).setMinWidth(0);
+        tablaEstadias.getColumnModel().getColumn(0).setMaxWidth(0);
+        tablaEstadias.getColumnModel().getColumn(0).setPreferredWidth(0);
     }
 
     private void aplicarRenderersTabla() {
-    tablaEstadias.getColumnModel()
-        .getColumn(7) // columna "Estado"
-        .setCellRenderer(new EstadoEstadiaRenderer());
-}    
+        // Renderer de filas completas
+        FilaEstadiaRenderer filaRenderer = new FilaEstadiaRenderer();
+
+        for (int i = 0; i < tablaEstadias.getColumnCount(); i++) {
+            tablaEstadias.getColumnModel()
+                    .getColumn(i)
+                    .setCellRenderer(filaRenderer);
+        }
+        
+        tablaEstadias.getColumnModel()
+                .getColumn(8) // columna "Estado"
+                .setCellRenderer(new EstadoEstadiaRenderer());
+    }    
     
+    private class FilaEstadiaRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+
+            Component c = super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, column);
+
+            String estado = table.getValueAt(row, 8).toString();
+
+            if ("FINALIZADA".equalsIgnoreCase(estado)) {
+                c.setBackground(new Color(241, 245, 249)); // gris suave
+                c.setForeground(new Color(100, 116, 139)); // texto apagado
+            } else {
+                c.setBackground(Color.WHITE);
+                c.setForeground(new Color(30, 41, 59));
+            }
+
+            // Respetar selección
+            if (isSelected) {
+                c.setBackground(table.getSelectionBackground());
+                c.setForeground(table.getSelectionForeground());
+            }
+
+            return c;
+        }
+    }
+
     // COMPONENTE DE TARJETA INDIVIDUAL 
     private class TarjetaHabitacion extends JPanel {
 
@@ -367,7 +585,7 @@ public class FrmEstadias extends javax.swing.JFrame {
         pnlGrid.add(crearCampoEstilizado("Adelanto (S/.)", txtAdelanto, "0.00"));
 
         // Estado
-        final JComboBox<String> cbEstado = new JComboBox<>(new String[]{"Ocupada", "Reservada"});
+        final JComboBox<String> cbEstado = new JComboBox<>(new String[]{"ACTIVA"});
         pnlGrid.add(crearSelectorEstilizado("Estado Inicial", cbEstado));
 
         pnlForm.add(pnlGrid);
@@ -582,7 +800,6 @@ public class FrmEstadias extends javax.swing.JFrame {
         return p;
     }
 
-    
     private JPanel crearComboEstilizado(String titulo, JComboBox<?> combo) {
         JPanel p = new JPanel(new BorderLayout(0, 5));
         p.setOpaque(false);
@@ -609,28 +826,37 @@ public class FrmEstadias extends javax.swing.JFrame {
             Component c = super.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, column);
 
-            if (value != null) {
-                String estado = value.toString().toUpperCase();
+            String estadoFila = table.getValueAt(row, 8).toString().toUpperCase();
 
-                switch (estado) {
-                    case "OCUPADA" ->
+            // === FONDO POR ESTADO DE LA FILA ===
+            if ("FINALIZADA".equals(estadoFila)) {
+                c.setBackground(new Color(241, 245, 249)); // gris suave
+                c.setForeground(new Color(100, 116, 139)); // texto apagado
+            } else {
+                c.setBackground(Color.WHITE);
+                c.setForeground(new Color(30, 41, 59));
+            }
+
+            // === COLOR DEL TEXTO DEL ESTADO ===
+            if (value != null) {
+                switch (estadoFila) {
+                    case "ACTIVA" ->
                         c.setForeground(new Color(220, 38, 38)); // rojo
-                    case "RESERVADA" ->
-                        c.setForeground(new Color(37, 99, 235)); // azul
                     case "FINALIZADA" ->
                         c.setForeground(new Color(22, 163, 74)); // verde
-                    default ->
-                        c.setForeground(new Color(100, 116, 139));
                 }
             }
 
+            // Respetar selección
             if (isSelected) {
+                c.setBackground(table.getSelectionBackground());
                 c.setForeground(table.getSelectionForeground());
             }
 
             return c;
         }
     }
+
 
     private void cargarComboHuesped(JComboBox<Huesped> combo) {
         combo.removeAllItems();
@@ -657,6 +883,7 @@ public class FrmEstadias extends javax.swing.JFrame {
         Habitacion hab = new ControladorHabitacion().buscarHabitacion(e.getIdHabitacion());
 
         modeloEstadias.addRow(new Object[]{
+            e.getIdEstadia(),
             h != null ? h.toString() : "",
             hab != null ? hab.toString() : "",
             e.getFechaHoraIngreso(),

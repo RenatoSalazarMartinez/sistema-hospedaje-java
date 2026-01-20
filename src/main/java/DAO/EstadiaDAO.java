@@ -284,4 +284,28 @@ public class EstadiaDAO implements CRUD<Estadia>{
         }
         return lista;
     }
+    
+    public int obtenerNumeroHabitacionPorEstadia(int idEstadia) {
+    String sql = """
+        SELECT h.numero
+        FROM Estadia e
+        JOIN Habitacion h ON e.idHabitacion = h.idHabitacion
+        WHERE e.idEstadia = ?
+    """;
+
+    try (Connection con = ConexionSQL.conectar();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setInt(1, idEstadia);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return rs.getInt("numero");
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return -1;
+}
+
 }

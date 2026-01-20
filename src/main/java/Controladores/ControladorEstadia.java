@@ -56,4 +56,9 @@ public class ControladorEstadia {
     public List<Estadia> listarEstadiasActivas() {
         return estadiaDAO.listarEstadiasActivas();
     }
+    
+    public int obtenerNumeroHabitacionPorEstadia(int idEstadia) {
+        return estadiaDAO.obtenerNumeroHabitacionPorEstadia(idEstadia);
+    }
+
 }
