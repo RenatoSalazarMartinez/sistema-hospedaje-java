@@ -76,6 +76,67 @@ public class EstadiaDAO implements CRUD<Estadia>{
     
     }
 
+    public int registrarYRetornarID(Estadia e) {
+
+    String sql = """
+        INSERT INTO Estadia
+        (idHuesped, idHabitacion,
+         fechaHoraIngreso, fechaHoraSalidaProgramada,
+         noches, precioPorNoche, total,
+         cantidadPersonas, estado)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVA')
+    """;
+
+    String sqlHabitacion = """
+        UPDATE Habitacion
+        SET estado = 'OCUPADA'
+        WHERE idHabitacion = ?
+    """;
+
+    Connection con = null;
+
+    try {
+        con = ConexionSQL.conectar();
+        con.setAutoCommit(false);
+
+        PreparedStatement ps = con.prepareStatement(
+            sql, Statement.RETURN_GENERATED_KEYS
+        );
+
+        ps.setInt(1, e.getIdHuesped());
+        ps.setInt(2, e.getIdHabitacion());
+        ps.setObject(3, e.getFechaHoraIngreso());
+        ps.setObject(4, e.getFechaHoraSalidaProgramada());
+        ps.setInt(5, e.getNoches());
+        ps.setDouble(6, e.getPrecioPorNoche());
+        ps.setDouble(7, e.getTotal());
+        ps.setInt(8, e.getCantidadPersonas());
+
+        ps.executeUpdate();
+
+        ResultSet rs = ps.getGeneratedKeys();
+        int idGenerado = -1;
+        if (rs.next()) {
+            idGenerado = rs.getInt(1);
+            e.setIdEstadia(idGenerado);
+        }
+
+        PreparedStatement psHabitacion = con.prepareStatement(sqlHabitacion);
+        psHabitacion.setInt(1, e.getIdHabitacion());
+        psHabitacion.executeUpdate();
+
+        con.commit();
+        return idGenerado;
+
+    } catch (Exception ex) {
+        try {
+            if (con != null) con.rollback();
+        } catch (SQLException ignored) {}
+        ex.printStackTrace();
+        return -1;
+    }
+}
+    
     @Override
     public boolean eliminar(int id) {
         String sqlEstadia = """
@@ -286,26 +347,40 @@ public class EstadiaDAO implements CRUD<Estadia>{
     }
     
     public int obtenerNumeroHabitacionPorEstadia(int idEstadia) {
-    String sql = """
+        String sql = """
         SELECT h.numero
         FROM Estadia e
         JOIN Habitacion h ON e.idHabitacion = h.idHabitacion
         WHERE e.idEstadia = ?
     """;
 
-    try (Connection con = ConexionSQL.conectar();
-         PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = ConexionSQL.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-        ps.setInt(1, idEstadia);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("numero");
+            ps.setInt(1, idEstadia);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("numero");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-    } catch (Exception e) {
-        e.printStackTrace();
+        return -1;
     }
-    return -1;
-}
+
+    public int obtenerIdHabitacionPorEstadia(int idEstadia) {
+        String sql = "SELECT idHabitacion FROM Estadia WHERE idEstadia = ?";
+        try (Connection con = ConexionSQL.conectar(); PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idEstadia);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("idHabitacion");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
 }

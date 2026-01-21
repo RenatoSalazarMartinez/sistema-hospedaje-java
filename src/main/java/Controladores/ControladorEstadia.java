@@ -21,6 +21,23 @@ public class ControladorEstadia {
         if (e.getCantidadPersonas() <= 0) throw new IllegalArgumentException("Cantidad de personas inválida.");
         return estadiaDAO.registrar(e);
     }
+    
+    public int registrarEstadiaConID(Estadia e) {
+
+        if (e.getIdHuesped() <= 0) {
+            throw new IllegalArgumentException("Huésped inválido");
+        }
+
+        if (e.getIdHabitacion() <= 0) {
+            throw new IllegalArgumentException("Habitación inválida");
+        }
+
+        if (e.getNoches() <= 0) {
+            throw new IllegalArgumentException("Cantidad de noches inválida");
+        }
+
+        return estadiaDAO.registrarYRetornarID(e);
+    }
 
     // MODIFICAR una estadía existente
     public boolean modificarEstadia(Estadia e) {
@@ -61,4 +78,7 @@ public class ControladorEstadia {
         return estadiaDAO.obtenerNumeroHabitacionPorEstadia(idEstadia);
     }
 
+    public int obtenerIdHabitacionPorEstadia (int idEstadia){
+        return estadiaDAO.obtenerIdHabitacionPorEstadia(idEstadia);
+    }
 }

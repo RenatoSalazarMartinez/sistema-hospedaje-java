@@ -1,14 +1,18 @@
 
 package Vistas;
 
+import Controladores.ControladorPago;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.toedter.calendar.JDateChooser;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
-import javax.swing.BorderFactory;
-import javax.swing.UIManager;
+import javax.swing.*;
 
 public class FrmPagos extends javax.swing.JFrame {
+    private ControladorPago controladorPago = new ControladorPago();
+
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmPagos.class.getName());
 
@@ -17,7 +21,9 @@ public class FrmPagos extends javax.swing.JFrame {
         configurarApariencia();
         initComponents();
         personalizarDiseno();
+        cargarTodosLosPagos();
     }
+
 
    
     @SuppressWarnings("unchecked")
@@ -28,7 +34,6 @@ public class FrmPagos extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
-        btnNuevoPago = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tablaPagos = new javax.swing.JTable();
         btnExportarExcel = new javax.swing.JButton();
@@ -45,16 +50,12 @@ public class FrmPagos extends javax.swing.JFrame {
         jLabel7.setForeground(new java.awt.Color(164, 164, 164));
         jLabel7.setText("Administrar los pagos de las estadías");
 
-        btnNuevoPago.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        btnNuevoPago.setText("Nuevo Pago");
-        btnNuevoPago.addActionListener(this::btnNuevoPagoActionPerformed);
-
         tablaPagos.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null}
+                {null, null, null, null}
             },
             new String [] {
-                "Fecha", "Estadía", "Huésped", "Monto", "Método de pago", "Estado"
+                "Fecha de pago", "Monto (S/.)", "Método de pago", "Estado"
             }
         ));
         jScrollPane2.setViewportView(tablaPagos);
@@ -74,22 +75,17 @@ public class FrmPagos extends javax.swing.JFrame {
                         .addComponent(btnExportarPDF)
                         .addGap(28, 28, 28)
                         .addComponent(btnExportarExcel))
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 388, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnNuevoPago))
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 832, Short.MAX_VALUE)))
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 832, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(41, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(31, 31, 31)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel1)
-                    .addComponent(btnNuevoPago))
+                .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel7)
                 .addGap(26, 26, 26)
@@ -120,10 +116,6 @@ public class FrmPagos extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnNuevoPagoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevoPagoActionPerformed
-        
-    }//GEN-LAST:event_btnNuevoPagoActionPerformed
-
     private void configurarApariencia() {
         try {
             FlatIntelliJLaf.setup();
@@ -146,13 +138,6 @@ public class FrmPagos extends javax.swing.JFrame {
         
         jLabel7.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         jLabel7.setForeground(new Color(100, 116, 139)); // Slate 500
-
-        // Botón "Nuevo Pago" Estilizado (Primario)
-        btnNuevoPago.setBackground(new Color(37, 99, 235)); // Blue 600
-        btnNuevoPago.setForeground(Color.WHITE);
-        btnNuevoPago.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnNuevoPago.setFocusPainted(false);
-        btnNuevoPago.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         // Botones de Exportación (Estilo con fondo sólido para mayor estética)
         btnExportarExcel.setBackground(new Color(22, 101, 52)); // Verde Excel sólido
@@ -178,6 +163,97 @@ public class FrmPagos extends javax.swing.JFrame {
         jScrollPane1.setBorder(null); // Quitar borde del scroll principal
     }
     
+    private void cargarTodosLosPagos() {
+
+        var modelo = new javax.swing.table.DefaultTableModel(
+                new Object[]{"Fecha", "Monto (S/.)", "Método", "Estado", "Estadía"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        controladorPago.listarPagos().forEach(p -> {
+            modelo.addRow(new Object[]{
+                p.getFechaPago(),
+                p.getMonto(),
+                p.getMetodoPago(),
+                p.getEstado(),
+                "Estadía #" + p.getIdEstadia()
+            });
+        });
+
+        tablaPagos.setModel(modelo);
+    }
+
+
+    private JPanel crearCampoEstilizado(String titulo, JTextField campo, String placeholder) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.WHITE);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lbl = new JLabel(titulo);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setForeground(new Color(71, 85, 105));
+
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        campo.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 36));
+        campo.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, placeholder);
+
+        panel.add(lbl);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(campo);
+
+        return panel;
+    }
+
+    private JPanel crearSelectorEstilizado(String titulo, JComboBox<?> combo) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.WHITE);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lbl = new JLabel(titulo);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setForeground(new Color(71, 85, 105));
+
+        combo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        combo.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 36));
+
+        panel.add(lbl);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(combo);
+
+        return panel;
+    }
+
+    private JPanel crearCampoFecha(String titulo, JDateChooser dateChooser) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.WHITE);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lbl = new JLabel(titulo);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setForeground(new Color(71, 85, 105));
+
+        dateChooser.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        dateChooser.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, 36));
+        dateChooser.setDate(new java.util.Date()); // fecha actual por defecto
+
+        panel.add(lbl);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(dateChooser);
+
+        return panel;
+    }
+
+    
     /**
      * @param args the command line arguments
      */
@@ -193,7 +269,6 @@ public class FrmPagos extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnExportarExcel;
     private javax.swing.JButton btnExportarPDF;
-    private javax.swing.JButton btnNuevoPago;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;

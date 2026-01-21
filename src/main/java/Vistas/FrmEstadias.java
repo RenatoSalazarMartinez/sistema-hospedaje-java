@@ -31,6 +31,7 @@ import Controladores.*;
 import DTO.Estadia;
 import DTO.Habitacion;
 import DTO.Huesped;
+import DTO.Pago;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
@@ -286,19 +287,15 @@ public class FrmEstadias extends javax.swing.JFrame {
                 if (!estadoActual.equals(nuevoEstado)
                         && nuevoEstado.equals("FINALIZADA")) {
 
-                    int numeroHab = controladorEstadia
-                            .obtenerNumeroHabitacionPorEstadia(idEstadia);
+                    int idHabitacion = controladorEstadia.obtenerIdHabitacionPorEstadia(idEstadia);
 
-                    Habitacion hab = new ControladorHabitacion()
-                            .buscarHabitacion(idEstadia);
-
-                    controladorEstadia.finalizarEstadia(
-                            idEstadia,
-                            hab.getIdHabitacion()
-                    );
+                    controladorEstadia.finalizarEstadia(idEstadia, idHabitacion);
 
                     // Actualizar tarjeta visual
-                    TarjetaHabitacion tarjeta = tarjetasHabitaciones.get(numeroHab);
+                    Habitacion hab = new ControladorHabitacion()
+                            .buscarHabitacion(idHabitacion);
+
+                    TarjetaHabitacion tarjeta = tarjetasHabitaciones.get(hab.getNumero());
                     if (tarjeta != null) {
                         tarjeta.setEstado("DISPONIBLE");
                     }
@@ -648,20 +645,48 @@ public class FrmEstadias extends javax.swing.JFrame {
                 eNueva.setCantidadPersonas(hab.getCapacidad());
                 eNueva.setEstado(cbEstado.getSelectedItem().toString());
 
-                if (controladorEstadia.crearEstadia(eNueva)) {
-                    JOptionPane.showMessageDialog(dialog, "Estadía registrada correctamente");
-                    listarEstadias();
+                int idEstadiaGenerada = controladorEstadia.registrarEstadiaConID(eNueva);
+
+                if (idEstadiaGenerada > 0) {
+
+                    // REGISTRAR PAGO AUTOMÁTICO
+                    Pago pago = new Pago();
+                    pago.setIdEstadia(idEstadiaGenerada);
+                    pago.setMonto(adelanto > 0 ? adelanto : total); // adelanto o total
+                    pago.setMetodoPago("EFECTIVO"); // por ahora fijo
+                    pago.setEstado("PAGADO");
+
+                    ControladorPago controladorPago = new ControladorPago();
+                    controladorPago.registrarPago(pago);
                     
-                    // actualizar tarjeta de la habitación
+                    
+                    JOptionPane.showMessageDialog(
+                            dialog,
+                            "Estadía registrada correctamente.\n"
+                            + "El pago se gestionará desde el módulo de pagos."
+                    );
+
+                    listarEstadias();
+
+                    // Actualizar tarjeta de la habitación
                     TarjetaHabitacion tarjeta = tarjetasHabitaciones.get(hab.getNumero());
                     if (tarjeta != null) {
-                        tarjeta.setEstado("OCUPADA"); // o el estado que corresponda
+                        tarjeta.setEstado("OCUPADA");
                     }
-                    
+
                     dialog.dispose();
+
+                    // OPCIONAL (cuando quieras):
+                    // new FrmPagos(idEstadiaGenerada).setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(dialog, "Error al registrar estadía");
+                    JOptionPane.showMessageDialog(
+                            dialog,
+                            "Error al registrar la estadía",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
                 }
+
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
