@@ -577,9 +577,48 @@ public class FrmEstadias extends javax.swing.JFrame {
         final JTextField txtNoches = new JTextField();
         final JTextField txtPrecio = new JTextField();
         final JTextField txtAdelanto = new JTextField();
+        final JComboBox<String> cbMetodoPago = new JComboBox<>(
+                new String[]{"EFECTIVO", "YAPE", "PLIN", "TRANSFERENCIA"}
+        );
+        final JLabel lblTotal = new JLabel("Total: S/. 0.00");
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTotal.setForeground(new Color(22, 163, 74)); // verde elegante
+
+        // === AUTOCALCULAR TOTAL ===
+        Runnable recalcularTotal = () -> {
+            try {
+                int noches = Integer.parseInt(txtNoches.getText());
+                double precio = Double.parseDouble(txtPrecio.getText());
+                double total = noches * precio;
+
+                lblTotal.setText(String.format("Total: S/. %.2f", total));
+            } catch (Exception ex) {
+                lblTotal.setText("Total: S/. 0.00");
+            }
+        };
+
+        txtPrecio.getDocument().addDocumentListener(
+                new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                recalcularTotal.run();
+            }
+
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                recalcularTotal.run();
+            }
+
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                recalcularTotal.run();
+            }
+        }
+        );
+
         pnlGrid.add(crearCampoEstilizado("Cant. Noches", txtNoches, "Autocalcular..."));
         pnlGrid.add(crearCampoEstilizado("Precio x Noche", txtPrecio, "0.00"));
         pnlGrid.add(crearCampoEstilizado("Adelanto (S/.)", txtAdelanto, "0.00"));
+        pnlGrid.add(crearSelectorEstilizado("Método de Pago", cbMetodoPago));
+        pnlGrid.add(crearTotalEstilizado(lblTotal));
+        pnlGrid.add(new JPanel()); // espacio vacío para cuadrar el grid
 
         // Estado
         final JComboBox<String> cbEstado = new JComboBox<>(new String[]{"ACTIVA"});
@@ -597,10 +636,13 @@ public class FrmEstadias extends javax.swing.JFrame {
                         noches = 0; // evitar negativos
                     }
                     txtNoches.setText(String.valueOf(noches));
+                    recalcularTotal.run();
                 }
             }
         };
 
+        
+        
         dcEntrada.addPropertyChangeListener(calcularNochesListener);
         dcSalida.addPropertyChangeListener(calcularNochesListener);
         
@@ -621,7 +663,7 @@ public class FrmEstadias extends javax.swing.JFrame {
 
         // === ACCION DEL BOTÓN GUARDAR ===
         btnGuar.addActionListener(e -> {
-            if (!validarFormulario(dialog, cbHuesped, cbHabitacion, txtNoches, txtPrecio, txtAdelanto, dcEntrada, dcSalida, cbEstado)) {
+            if (!validarFormulario(dialog, cbHuesped, cbHabitacion, txtNoches, txtPrecio, txtAdelanto, dcEntrada, dcSalida, cbEstado, cbMetodoPago)) {
                 return;
             }
 
@@ -652,9 +694,17 @@ public class FrmEstadias extends javax.swing.JFrame {
                     // REGISTRAR PAGO AUTOMÁTICO
                     Pago pago = new Pago();
                     pago.setIdEstadia(idEstadiaGenerada);
-                    pago.setMonto(adelanto > 0 ? adelanto : total); // adelanto o total
-                    pago.setMetodoPago("EFECTIVO"); // por ahora fijo
-                    pago.setEstado("PAGADO");
+                    double montoPagado = adelanto > 0 ? adelanto : total;
+
+                    pago.setMonto(montoPagado);
+                    pago.setMetodoPago(cbMetodoPago.getSelectedItem().toString());
+
+                    if (adelanto > 0 && adelanto < total) {
+                        pago.setEstado("PARCIAL");
+                    } else {
+                        pago.setEstado("PAGADO");
+                    }
+
 
                     ControladorPago controladorPago = new ControladorPago();
                     controladorPago.registrarPago(pago);
@@ -708,7 +758,8 @@ public class FrmEstadias extends javax.swing.JFrame {
             JTextField txtAdelanto,
             JDateChooser dcEntrada,
             JDateChooser dcSalida,
-            JComboBox<String> cbEstado
+            JComboBox<String> cbEstado,
+            JComboBox<String> cbMetodoPago
     ) {
         // Huésped
         if (cbHuesped.getSelectedItem() == null) {
@@ -785,7 +836,37 @@ public class FrmEstadias extends javax.swing.JFrame {
             return false;
         }
 
+        if (cbMetodoPago.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(dialog, "Seleccione el método de pago");
+            return false;
+        }
+        
+        double total = Integer.parseInt(txtNoches.getText())
+                * Double.parseDouble(txtPrecio.getText());
+
+        double adelanto = txtAdelanto.getText().isEmpty()
+                ? 0
+                : Double.parseDouble(txtAdelanto.getText());
+
+        if (adelanto > total) {
+            JOptionPane.showMessageDialog(dialog,
+                    "El adelanto no puede ser mayor al total");
+            txtAdelanto.requestFocus();
+            return false;
+        }
+
         return true; // todo correcto
+    }
+
+    private JPanel crearTotalEstilizado(JLabel lbl) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setOpaque(false);
+
+        lbl.setHorizontalAlignment(JLabel.RIGHT);
+        lbl.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 10));
+
+        p.add(lbl, BorderLayout.CENTER);
+        return p;
     }
 
     

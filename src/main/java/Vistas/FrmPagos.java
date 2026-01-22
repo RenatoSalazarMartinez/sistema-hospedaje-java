@@ -22,6 +22,7 @@ public class FrmPagos extends javax.swing.JFrame {
         initComponents();
         personalizarDiseno();
         cargarTodosLosPagos();
+//        configurarEventos();
     }
 
 
@@ -61,8 +62,10 @@ public class FrmPagos extends javax.swing.JFrame {
         jScrollPane2.setViewportView(tablaPagos);
 
         btnExportarExcel.setText("Exportar Excel");
+        btnExportarExcel.addActionListener(this::btnExportarExcelActionPerformed);
 
         btnExportarPDF.setText("Exportar PDF");
+        btnExportarPDF.addActionListener(this::btnExportarPDFActionPerformed);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -116,6 +119,28 @@ public class FrmPagos extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnExportarPDFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportarPDFActionPerformed
+        var pagos = controladorPago.listarPagos();
+        Utilidades.ExportarPagosPDF.exportar(pagos);
+    }//GEN-LAST:event_btnExportarPDFActionPerformed
+
+    private void btnExportarExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportarExcelActionPerformed
+        var pagos = controladorPago.listarPagos();
+        Utilidades.ExportarPagosExcel.exportar(pagos);
+    }//GEN-LAST:event_btnExportarExcelActionPerformed
+
+//    private void configurarEventos() {
+//
+//        btnExportarPDF.addActionListener(e -> {
+//            
+//        });
+//
+//        btnExportarExcel.addActionListener(e -> {
+//            
+//        });
+//    }
+
+    
     private void configurarApariencia() {
         try {
             FlatIntelliJLaf.setup();

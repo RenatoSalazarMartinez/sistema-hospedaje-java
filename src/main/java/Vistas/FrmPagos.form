@@ -131,11 +131,17 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="Exportar Excel"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnExportarExcelActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JButton" name="btnExportarPDF">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Exportar PDF"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnExportarPDFActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
